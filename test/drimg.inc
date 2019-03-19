@@ -1,0 +1,7 @@
+  
+	CALL	RBUFFER_BACK
+	MOVP2	A
+	MOV	R1,	#0
+	MOV	DPTR,	#img_title
+	CLR	C
+	CALL	RDRAWIMAGE  

@@ -1,0 +1,218 @@
+; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; DEFINE_MODULE	SSN_TMPLT??? ; This isn't required on session definition
+; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+LOCMEM_PVT
+LBIT_PVT
+; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;
+;	SSN_JIRUNG
+;
+; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+;	DESCRIPTION
+; The jirungi game.
+; Uses 16*16 size of screen to describe jirungi game session.
+; 1 byte of memory allocated for represent current PIVOT location,
+;and the 16*16 size board itself represents current game state.
+; 1 byte of memory allocated to store current direction, u d r l
+; The worm dies when the pivot located on biting its body.
+; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+; ######### SUBROUTINES & MACROS ##################################### 
+; --------------------------------------------------------------------
+; @NOTE	LOADCDW	HI, LO, CONST
+; @NOTE	MOVP2	VAL
+; --------------------------------------------------------------------
+;
+; 	LOCAL MEMORY ALLOCATIONS
+;
+; TYPE     |IDENTIFIER |SIZE/DESCRIPTION
+; ---------|-----------|----------------------------------------------  
+MEMALIGN	LOCAL_MEMORY, 100H
+LOCMEM	JR_BOARD,100H; .Main game board of jirungi game.
+LOCMEM	JR_PVT, 1	; .The pivot location of jirungi. Should be aligned as Y X order.
+LOCMEM	JR_DIR, 1	; .Direction of jirungi's pivot. Should be aligned as Y X order.
+LOCMEM	JR_LVL, 1	; .Number of layers of jirungi. 
+LOCMEM	JR_FOOD, 1	; .Current food location.
+LOCMEM	JR_TICKS, 1	; .Tick count to next frame.
+; --------------------------------------------------------------------
+; @CALBAK	JRUPDATE
+; --------------------------------------------------------------------
+cJRUPDATE:	
+	USING	GAMEBANK/8
+; <algorithm overview>
+; [] moves head as its direction
+; <> if there's worm's body on new pivot location...
+;	[] game overs, call ranking. 
+; <> if there's <<<NO>>> food on the new pivot location ...
+;	[] iterate all the board elements to decrease them by 1 for each, only when it is larger than 0.
+;	==> this means, there's no decreasing if there's any food.
+; ><> else ... // if there's any food...
+;	[] increase current level count by 1
+;	[] places a food on random point.
+; [] fills the point which is current pivot location as current level.
+; ~done.
+	; All the action begins only when the ticks equals zero.
+	; [] Decreases tick count, and escapes.
+JRUPDATE_BEGIN:
+	; Resets ticks left
+	
+	; [] MOVE HEAD LOC
+	; get direction
+	
+	; get cur pivot.
+	
+	; add them each.
+	
+	; <> check if there's worm body.
+	; The dpl will directly be the coordinate.
+	
+	; If it's not zero, that means there's worm body.
+	; [] game over sequence. 
+JRUPDATE_NOOVER:
+	; <> if there's no food on new pivot loc...
+	; gets food location. 
+	
+	; compare with .. 
+	
+; ==> there's food. 
+	; [] increases current level by 1. Increases score. 
+	; [] places food on random point. 
+	; random pivot 
+	; determine direction to proceed. 
+	
+JRUPDATE_FINDPUTFOOD:
+; <> if specified board element location indicates 0, put food there.
+	; :: else, iterate until find valid place. 
+	; move up or down  
+JRUPDATE_INC: 
+JRUPDATE_FOUND:
+	
+	; Now, dpl points an empty place.
+	; locates new food. 
+
+	; [] increases score. 
+	; adds score repeatedly, 50 per 10 level.
+JRUPDATE_SCORELP: 
+	; adds score. 
+	; check for iteration condition  
+	
+	; done.	
+	SJMP 	JRUPDATE_FILLCURRENT
+JRUPDATE_NOFOOD:
+; ==> there's no food.
+	; [] iterates every element of board, and if it's not zero, decreases each cells. 
+JRUPDATE_LIFESPAN: 
+	; <> if lifespan left in this cell is larger than 0 ... 
+	; [] decreases it by 1. 
+JRUPDATE_SKIP: 
+; ~~JRUPDATE_LIFESPAN
+JRUPDATE_FILLCURRENT:
+	; [] fills current pivot location by current level.
+	; current pivot location.  
+		
+	; current level. 
+	
+	; Sets it by ... 
+	
+	RET
+; --------------------------------------------------------------------
+; @CALBAK	JRINIT
+; --------------------------------------------------------------------
+; Initializes jirungi game.
+cJRINIT:
+	; Resets current level as 1. 
+	
+	; Resets pivot 
+	
+	; Locates the first food. It'll be fixed location, 9'9. 
+	
+	; Adjust heading direction. Default is 0. game begins when 
+	;the player starts to move. 
+	
+	; Set initial tick timer. 
+
+	RET
+; --------------------------------------------------------------------
+; @CALBAK	JRDRAW
+; --------------------------------------------------------------------
+; Draws jirungi game board every tick.
+cJRDRAW:
+	; clears screen 
+	
+	; draws border
+	; border will be like this ..
+	; +----+      +----+
+	; |    | GAME |    |
+	; +----+      +----+
+	; The first border. 
+	
+	; The second border. 
+	 
+	; iterate all the board element, and draws color if it's not 0.
+	; Radix point = Y0 X8 
+	; draws activated food.
+JRDRAW_BOARD_0:
+	; <> if the board element is not zero, fill white color. 
+	; [] draw dot.
+	; transpose location from board to disp. 
+	; call drawdot 
+	
+JRDRAW_BOARD_1:	; NODRAW
+	 
+; ~~JRDRAW_BOARD_0
+
+	; [] Draws food location
+	; adjusts location 
+	
+	; draws dot 
+	
+; Transform 16 by 16 location to (F0)1 + 3 by 8 location
+; I 	A	INPUT LOCATION
+; OUT	F0	SCREEN SELECTION
+; OUT	A	OUTPUT LOCATION (3, 5)
+; X 	B
+JRDRAW_BLKTODISP: 
+	; Upper 4bit to F0 + 3bit ofst 
+	; Lower 4bit and add 7 to shift right. 
+	; Masks B, its lower value. 
+	RET
+; --------------------------------------------------------------------
+; @CALBAK 	INPUTCALLBACK
+; @NOTE 	BUTTON.6 	L
+;	BUTTON.5 	D
+;	BUTTON.4 	U
+;	BUTTON.3 	R
+;	BUTTON.2 	ACTA
+;	BUTTON.1 	ACTB
+;	BUTTON.0 	HOME
+;
+; I	R0	KEYDOWN
+; I 	R1	KEYUP
+; I 	R2	KEYHOLD
+; --------------------------------------------------------------------
+cJRINPUT:	
+	USING 	GAMEBANK/8
+	
+	MOV	BR0,	R0
+	MOV	DPTR,	#JR_DIR
+	MOVX	A,	@DPTR
+	
+JRINPUT_U:	JNB	BR0.4,	JRINPUT_D
+	MOV	A,	#11110000B
+	SJMP	JRINPUT_X
+	
+JRINPUT_D:	JNB	BR0.5,	JRINPUT_L
+	MOV	A,	#00010000B
+	SJMP	JRINPUT_X
+	
+JRINPUT_L:	JNB	BR0.6,	JRINPUT_R
+	MOV	A,	#00001111B
+	SJMP	JRINPUT_X
+	
+JRINPUT_R:	JNB	BR0.3,	JRINPUT_X
+	MOV	A,	#00000001B
+	SJMP	JRINPUT_X
+	
+JRINPUT_X:	MOVX	@DPTR,	A
+	RET
+; -------------------------------------------------------------------- 
+; ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++

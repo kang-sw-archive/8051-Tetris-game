@@ -1,0 +1,9 @@
+
+	ORG	4000H
+
+	MOV	DPTR,	#0C000H
+LP:	MOVX	A,	@DPTR
+	MOV	P1,	A
+	SJMP	LP 
+	
+	END
